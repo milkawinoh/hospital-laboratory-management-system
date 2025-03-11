@@ -45,3 +45,17 @@ const testSchema = z.object({
     }
   }
   
+
+  export async function GET() {
+    try {
+      const tests = await prisma.diagnosticTest.findMany({
+        orderBy: { testDate: "desc" }, // Sort results by latest testDate
+      });
+  
+      return NextResponse.json(tests, { status: 200 });
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      return NextResponse.json({ error: "Failed to fetch tests" }, { status: 500 });
+    }
+  }
+  
