@@ -70,3 +70,31 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     );
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+
+    if (!id || isNaN(Number(id))) {
+      return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
+    }
+
+    // Check if the test exists before deleting
+    const existingTest = await prisma.diagnosticTest.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!existingTest) {
+      return NextResponse.json({ error: "Test not found" }, { status: 404 });
+    }
+
+    await prisma.diagnosticTest.delete({
+      where: { id: Number(id) },
+    });
+
+    return NextResponse.json({ message: "Test deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting test:", error);
+    return NextResponse.json({ error: "Failed to delete test" }, { status: 500 });
+  }
+}
