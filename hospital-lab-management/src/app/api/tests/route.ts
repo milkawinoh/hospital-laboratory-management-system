@@ -15,19 +15,31 @@ const testSchema = z.object({
     notes: z.string().optional(),
   });
   
+  
   export async function POST(req: Request) {
     try {
       const body = await req.json(); // Parse JSON request body
+      console.log("Received request body:", body); // ✅ Debugging log
+  
       const validatedData = testSchema.parse(body); // Validate input
+      console.log("Validated data:", validatedData); // ✅ Debugging log
+  
+      // ✅ Convert testDate to ISO-8601 format
+      const formattedTestDate = new Date(validatedData.testDate).toISOString();
   
       const newTest = await prisma.diagnosticTest.create({
-        data: validatedData,
+        data: {
+          ...validatedData,
+          testDate: formattedTestDate, // ✅ Use ISO format
+        },
       });
   
       return NextResponse.json(newTest, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error creating test:", error); // ✅ Log full error in console
+  
       return NextResponse.json(
-        { error: error instanceof z.ZodError ? error.errors : "Failed to create test" },
+        { error: error instanceof z.ZodError ? error.errors : error.message || "Failed to create test" },
         { status: 400 }
       );
     }
