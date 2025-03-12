@@ -14,9 +14,10 @@ const updateTestSchema = z.object({
   }).optional(),
   notes: z.string().optional(),
 });
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params; //  Extract the ID from the dynamic route
+    const { id } = await context.params; // Await the params Promise
 
     if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
@@ -38,24 +39,24 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT `/api/tests/:id` → Update an Existing Test
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await context.params; // Await the params Promise
     const body = await req.json(); // Parse request body
 
     if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
     }
 
-    //  Validate Input (Partial Updates Allowed)
+    // Validate Input (Partial Updates Allowed)
     const validatedData = updateTestSchema.parse(body);
 
-    //  Convert testDate (if provided) to ISO format
+    // Convert testDate (if provided) to ISO format
     if (validatedData.testDate) {
       validatedData.testDate = new Date(validatedData.testDate).toISOString();
     }
 
-    //  Update test result in the database
+    // Update test result in the database
     const updatedTest = await prisma.diagnosticTest.update({
       where: { id: Number(id) },
       data: validatedData,
@@ -71,9 +72,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await context.params; // Await the params Promise
 
     if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
