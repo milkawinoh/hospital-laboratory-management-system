@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ Import useRouter for navigation
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
 interface TestResult {
@@ -14,7 +14,7 @@ interface TestResult {
 }
 
 export default function Dashboard() {
-  const router = useRouter(); // ✅ Initialize Next.js router
+  const router = useRouter();
   const [tests, setTests] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -54,7 +54,18 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">Dashboard</h1>
+      {/* ✅ Updated Header Section */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+
+        {/* ✅ "Create Test" Button */}
+        <button
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          onClick={() => router.push("/tests/create")}
+        >
+          + Create Test
+        </button>
+      </div>
 
       {loading ? (
         <p className="text-center text-gray-500">Loading test results...</p>
