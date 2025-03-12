@@ -46,16 +46,48 @@ const testSchema = z.object({
   }
   
 
-  export async function GET() {
+  export async function GET(req: Request) {
     try {
-      const tests = await prisma.diagnosticTest.findMany({
-        orderBy: { testDate: "desc" }, // Sort results by latest testDate
+      // ✅ Extract query parameters from URL
+      const { searchParams } = new URL(req.url);
+      const page = parseInt(searchParams.get("page") || "1", 10); // Default page 1
+      const limit = parseInt(searchParams.get("limit") || "5", 10); // Default 5 per page
+      const searchQuery = searchParams.get("search") || ""; // Default empty search
+  
+      // ✅ Calculate pagination offset
+      const offset = (page - 1) * limit;
+  
+      // ✅ Fetch total number of matching records
+      const totalRecords = await prisma.diagnosticTest.count({
+        where: {
+          OR: [
+            { patientName: { contains: searchQuery, mode: "insensitive" } },
+            { testType: { contains: searchQuery, mode: "insensitive" } },
+          ],
+        },
       });
   
-      return NextResponse.json(tests, { status: 200 });
+      // ✅ Fetch filtered test results with pagination
+      const tests = await prisma.diagnosticTest.findMany({
+        where: {
+          OR: [
+            { patientName: { contains: searchQuery, mode: "insensitive" } },
+            { testType: { contains: searchQuery, mode: "insensitive" } },
+          ],
+        },
+        skip: offset,
+        take: limit,
+        orderBy: { testDate: "desc" }, // Sort by latest testDate
+      });
+  
+      return NextResponse.json({
+        tests,
+        totalRecords,
+        totalPages: Math.ceil(totalRecords / limit),
+        currentPage: page,
+      });
     } catch (error) {
-      console.error("Error fetching tests:", error);
-      return NextResponse.json({ error: "Failed to fetch tests" }, { status: 500 });
+      console.error("Error fetching test results:", error);
+      return NextResponse.json({ error: "Failed to fetch test results" }, { status: 500 });
     }
   }
-  
