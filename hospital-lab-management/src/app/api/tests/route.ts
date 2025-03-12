@@ -46,16 +46,24 @@ const testSchema = z.object({
   }
   
 
-  export async function GET() {
+  export async function GET(req: Request, context: { params: { id: string } }) {
     try {
-      const tests = await prisma.diagnosticTest.findMany({
-        orderBy: { testDate: "desc" }, // Sort results by latest testDate
+      const { id } = await context.params; // ✅ Await the params
+  
+      if (!id || isNaN(Number(id))) {
+        return NextResponse.json({ error: "Invalid test ID" }, { status: 400 });
+      }
+  
+      const test = await prisma.diagnosticTest.findUnique({
+        where: { id: Number(id) },
       });
   
-      return NextResponse.json(tests, { status: 200 });
+      if (!test) {
+        return NextResponse.json({ error: "Test not found" }, { status: 404 });
+      }
+  
+      return NextResponse.json(test);
     } catch (error) {
-      console.error("Error fetching tests:", error);
-      return NextResponse.json({ error: "Failed to fetch tests" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to fetch test" }, { status: 500 });
     }
   }
-  

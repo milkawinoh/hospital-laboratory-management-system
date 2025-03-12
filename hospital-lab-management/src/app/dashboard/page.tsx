@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ Import useRouter for navigation
 import axios from "axios";
 
 interface TestResult {
@@ -13,9 +14,10 @@ interface TestResult {
 }
 
 export default function Dashboard() {
+  const router = useRouter(); // ✅ Initialize Next.js router
   const [tests, setTests] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null); // Track deletion state
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTests();
@@ -38,15 +40,15 @@ export default function Dashboard() {
       return;
     }
 
-    setDeletingId(id); // Show loading indicator on the button
+    setDeletingId(id);
 
     try {
       await axios.delete(`/api/tests/${id}`);
-      setTests(tests.filter((test) => test.id !== id)); // Remove deleted test from UI
+      setTests(tests.filter((test) => test.id !== id));
     } catch (error) {
       console.error("Error deleting test:", error);
     } finally {
-      setDeletingId(null); // Reset loading state
+      setDeletingId(null);
     }
   };
 
@@ -76,7 +78,13 @@ export default function Dashboard() {
                   <td className="px-4 py-2">{test.result}</td>
                   <td className="px-4 py-2">{new Date(test.testDate).toLocaleDateString()}</td>
                   <td className="px-4 py-2 flex space-x-4">
-                    <button className="text-blue-600 hover:underline">Edit</button>
+                    {/* ✅ Updated Edit button to navigate to Edit Page */}
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => router.push(`/tests/edit/${test.id}`)}
+                    >
+                      Edit
+                    </button>
                     <button
                       className="text-red-600 hover:underline"
                       onClick={() => handleDelete(test.id)}
